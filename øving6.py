@@ -1,36 +1,45 @@
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime as dt
+from decimal import Decimal
 
-# Fil 1
-fil1_tidspunkt = []
-fil1_temperatur = []
+# Definerer lister for fil 1: SOLA VÆRSTASJON
+sola_tidspunkt = []
+sola_temperatur = []
 
-# Funksjon for å konvertere datoer til datetime-objekter
-def parse_date(date_str):
-    for fmt in ('%d.%m.%Y %H:%M', '%d/%m/%y %H:%M'):
-        try:
-            return datetime.strptime(date_str, fmt)
-        except ValueError:
-            continue
-    return None  # Returner None hvis ingen formater matcher
+# Leser inn temperatur og tidspunkt fra fil 1: SOLA VÆRSTASJON
+with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil:
+    sola = csv.reader(fil, delimiter=';')  # Bruk semikolon som skilletegn
+    next(sola)  # Hopper over øverste rad
+    for rad in sola:
+        if rad[2] and rad[3]:
+            try:
+                # Konverterer dato/tid (tredje kolonne)
+                tidspunkt1 = dt.strptime(rad[2], "%d.%m.%Y %H:%M")
+                sola_tidspunkt.append(tidspunkt1)  # Lagrer tidspunktet som datetime-objekt
 
-# Les inn fil 1
-with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil1:
-    reader = csv.reader(fil1, delimiter=';')  # Bruk semikolon som skilletegn
-    next(reader)  # Hopp over header
-    for rad in reader:
-        dato_str = rad[2]  # Anta at dato/tid er i tredje kolonne
-        if rad[3]:  # Bare fortsett hvis temperaturen er til stede
-            temperatur1 = float(rad[3].replace(',', '.'))  # Anta at temperaturen er i fjerde kolonne
-            
-            # Konverter datoen til datetime-objekt
-            tidspunkt1 = parse_date(dato_str)  # Bruk funksjonen for dato parsing
-            
-            if tidspunkt1:  # Bare legg til hvis datoen ble konvertert
-                fil1_tidspunkt.append(tidspunkt1)
-                fil1_temperatur.append(temperatur1)
+                # Konverterer temperatur (fjerde kolonne) til desimal og bytter ut komma med punktum
+                temperatur1 = Decimal(rad[3].replace(',', '.'))
+                sola_temperatur.append(float(temperatur1))  # Konverterer til float
 
+            except Exception as e:
+                print(f"Feil med rad {rad}: {e}")
+
+# Plotting av temperaturen mot tid
+plt.figure(figsize=(12, 6))  # Setter figurstørrelse
+plt.plot(sola_tidspunkt, sola_temperatur)
+plt.title('Temperatur over tid')
+plt.xlabel('Tidspunkt')
+plt.ylabel('Temperatur (°C)')
+plt.xticks(rotation=45)  # Roterer x-aksen for bedre lesbarhet
+plt.grid()
+plt.tight_layout()  # Sørger for at alt får plass
+plt.figlegend()
+plt.show()
+
+
+
+"""
 # Finn startdatoen for plotting
 start_time = min(fil1_tidspunkt)
 # Konverter datoene til antall minutter etter start
@@ -48,3 +57,4 @@ plt.xticks(rotation=45)  # Rotér x-aksen for å gjøre datoer mer lesbare
 plt.legend()
 plt.tight_layout()  # Juster layout så ingenting blir avkuttet
 plt.show()
+"""

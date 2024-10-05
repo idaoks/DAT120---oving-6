@@ -1,73 +1,80 @@
 import csv
 import matplotlib.pyplot as plt
-from datetime import datetime
+from datetime import datetime as dt
+from decimal import Decimal
 
-# Funksjon for å konvertere datoer til datetime-objekter
-def parse_date(date_str, fmt):
-    try:
-        return datetime.strptime(date_str, fmt)
-    except ValueError:
-        return None
+# Definerer lister for SOLA VÆRSTASJON
+sola_tidspunkt = []
+sola_temperatur = []
 
-# Lister for tidspunkter og temperaturer
-fil1_tidspunkt = []
-fil1_temperatur = []
-fil2_tidspunkt = []
-fil2_temperatur = []
-
-# Les inn fil 1
-with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil1:
-    reader = csv.reader(fil1, delimiter=';')
-    next(reader)  # Hopp over header
-    for rad in reader:
-        dato_str = rad[2]  # Anta at dato/tid er i tredje kolonne
-        if rad[3]:  # Bare fortsett hvis temperaturen er til stede
-            temperatur1 = float(rad[3].replace(',', '.'))
-            tidspunkt1 = parse_date(dato_str, '%d.%m.%Y %H:%M')  # Format for fil 1
-            if tidspunkt1:  # Bare legg til hvis datoen ble konvertert
-                fil1_tidspunkt.append(tidspunkt1)
-                fil1_temperatur.append(temperatur1)
-
-# Les inn fil 2
-with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil2:
-    reader = csv.reader(fil2, delimiter=';')
-    next(reader)  # Hopp over header
-    for rad in reader:
-        print(f"Rådata fra fil 2: {rad}")  # Skriv ut hver rad
-        dato_str2 = rad[0]  # Anta at dato/tid er i første kolonne
-        if rad[4]:  # Bare fortsett hvis temperaturen er til stede
+# Leser inn temperatur og tidspunkt fra fil 1: SOLA VÆRSTASJON
+with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil:
+    sola = csv.reader(fil, delimiter=';')  # Bruk semikolon som skilletegn
+    next(sola)  # Hopper over øverste rad
+    for rad in sola:
+        if rad[2] and rad[3]:
             try:
-                temperatur2 = float(rad[4].replace(',', '.'))
-                # Oppdatert datoformat for fil 2
-                tidspunkt2 = parse_date(dato_str2, '%m/%d/%Y %H:%M')  # Format for fil 2
-                if tidspunkt2:  # Bare legg til hvis datoen ble konvertert
-                    fil2_tidspunkt.append(tidspunkt2)
-                    fil2_temperatur.append(temperatur2)
-            except ValueError as e:
-                print(f"Feil ved konvertering av temperatur: {e}")
+                # Konverterer dato/tid (tredje kolonne)
+                tidspunkt1 = dt.strptime(rad[2], "%d.%m.%Y %H:%M")
+                sola_tidspunkt.append(tidspunkt1)  # Lagrer tidspunktet som datetime-objekt
 
-# Sjekk at vi har lest inn dataene
-print("Fil 1: Antall datapunkter:", len(fil1_tidspunkt))
-print("Fil 2: Antall datapunkter:", len(fil2_tidspunkt))
+                # Konverterer temperatur (fjerde kolonne) til desimal og bytter ut komma med punktum
+                temperatur1 = Decimal(rad[3].replace(',', '.'))
+                sola_temperatur.append(float(temperatur1))  # Konverterer til float
 
-# Opprett plott
+            except Exception as e:
+                print(f"Feil med rad {rad}: {e}")
+
+
+# Definerer lister for UiS VÆRSTASJON
+uis_tidspunkt = []
+uis_temperatur = []
+
+# Leser inn temperatur og tidspunkt fra fil 2: UiS VÆRSTASJON
+with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil:
+    uis = csv.reader(fil, delimiter=';')  # Bruk semikolon som skilletegn
+    next(uis)  # Hopper over øverste rad
+    for rad in uis:
+        if rad[0]:
+            try:
+                # Konverterer dato/tid
+                if int(rad[1]) % 60 == 0:
+                    tidspunkt2 = dt.strptime(rad[0], "%m.%d.%Y %H:%M")
+                    uis_tidspunkt.append(tidspunkt2)  # Lagrer tidspunktet som datetime-objekt
+
+            except ValueError:
+                print(rad[0])
+                print("Ugyldig datoformat oppdaget. Stopping lesingen av filen.")
+                break
+
+        if rad[4]:  # Temperaturopplysning er i kolonne 5
+            try:
+                if int(rad[1]) % 60 == 0:
+                # Konverterer temperatur (fjerde kolonne) til desimal og bytter ut komma med punktum
+                    temperatur2 = Decimal(rad[4].replace(',', '.'))
+                    uis_temperatur.append(float(temperatur2))  # Konverterer til float
+            except Exception as e:
+                print(f"Feil med rad {rad}, kolonne 5: {e}")
+
+
+# Størrelse for plottingen i vinduet
 plt.figure(figsize=(12, 6))
 
-# Plott temperatur fra fil 1
-plt.plot(fil1_tidspunkt, fil1_temperatur, label='Temperatur Fil 1', color='tab:blue')
+# Plotter temperatur fra Sola
+plt.plot(sola_tidspunkt, sola_temperatur, label='Temperatur Sola', color='green')
 
-# Plott temperatur fra fil 2
-if fil2_tidspunkt and fil2_temperatur:  # Sjekk om det er data før plotting
-    plt.plot(fil2_tidspunkt, fil2_temperatur, label='Temperatur Fil 2', color='tab:green')
-else:
-    print("Ingen data fra Fil 2 ble plottet.")
+# Plotter temperatur fra UiS
+plt.plot(uis_tidspunkt, uis_temperatur, label='Temperatur UiS', color='blue')
 
-# Legg til etiketter og tittel
+# Grenser
+plt.ylim(10, 24)  # 10 til 24 grader i y-aksen
+plt.xlim(dt(2021, 6, 11, 0, 0), dt(2021, 6, 14, 0, 0))  # Datoer i x-aksen
+
+
+plt.title('Sammenligning av temperaturer - SOLA og UiS')
 plt.xlabel('Tidspunkt')
 plt.ylabel('Temperatur (°C)')
-plt.title('Temperatur over tid')
-plt.legend()
-plt.xticks(rotation=45)  # Rotér x-aksen for å gjøre datoer mer lesbare
-plt.tight_layout()  # Juster layout så ingenting blir avkuttet
-plt.grid(True)  # Legg til rutenett for bedre lesbarhet
+plt.grid()
+plt.legend(loc='upper left') # Oversikt av farger og navn øverst til venstre
+plt.tight_layout()  # Ordner plass til begge
 plt.show()
