@@ -33,9 +33,6 @@ with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil:
         # Tilsvarende for å hente absolutt trykk:
         if rad[2] and rad[4]:
             try:
-                # tidspunkt1_abs_trykk = dt.strptime(rad[2], "%d.%m.%Y %H:%M")
-                # sola_tidspunkt_abstrykk.append(tidspunkt1_abs_trykk)
-
                 absolutt_trykk1 = Decimal(rad[4].replace(',','.'))
                 sola_absolutt_trykk.append(float(absolutt_trykk1))
             
@@ -92,8 +89,8 @@ with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil:
         if rad[2]:
             try:
                 if int(rad[1]) % 60 == 0:
-                    absolutt_trykk2 = Decimal(rad[2].replace(',','.'))
-                    uis_absolutt_trykk.append(float(absolutt_trykk2) * 10)
+                    barometrisk_trykk2 = Decimal(rad[2].replace(',','.'))
+                    uis_barometrisk_trykk.append(float(barometrisk_trykk2) * 10)
             
             except Exception as e:
                 print(f"(BAROMETRISK TRYKK UIS): Feil med rad {rad}, kolonne 5: {e}")
@@ -158,7 +155,7 @@ print(f"Lengde på uis_barometrisk_trykk: {len(uis_barometrisk_trykk)}")
 print(f"Første 5 elementer i uis_absolutt_trykk: {uis_barometrisk_trykk[:5]}")
 
 
-fig, (temperatur, trykk) = plt.subplots(2, 1, figsize=(12, 12))
+fig, (temperatur, trykk) = plt.subplots(2, 1, figsize=(8, 10))
 
 # Første subplot for temperaturer
 temperatur.plot(sola_tidspunkt, sola_temperatur, label='Temperatur Sola', color='green')
@@ -187,14 +184,6 @@ trykk.set_ylabel('Trykk')
 trykk.grid()
 trykk.legend(loc='upper left')
 
+plt.subplots_adjust(hspace=0.4)  # Øker avstanden mellom subplottene
 plt.tight_layout()
 plt.show()
-
-
-
-"""
-Mangler bare å plotte barometrisk trykk for UiS.
-Feil med antall tider i liste i forhold til verdier for barometrisk trykk.
-Prøv å legg inn nye tider inn i den nye listen for barometrisk tid,
-som først tenkt.
-"""
