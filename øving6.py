@@ -46,10 +46,7 @@ uis_tidspunkt = []
 uis_temperatur = []
 
 uis_absolutt_trykk = []
-uis_absolutt_trykk_tid = []
-
 uis_barometrisk_trykk = []
-uis_barometrisk_trykk_tid = []
 
 # Leser inn data fra fil 2: UiS VÆRSTASJON
 with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil:
@@ -96,7 +93,7 @@ with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil:
                 print(f"(BAROMETRISK TRYKK UIS): Feil med rad {rad}, kolonne 5: {e}")
 
 
-# g) Funksjon som regner "glidegjennomsnitt"
+# g) Funksjon som regner ut glidegjennomsnitt
 def gjsnitt(tider=list, temperaturer=list, n=int):
             """ Tar inn tre inputs: liste med tider, liste med temperaturer og et tall n. """
             # Definerer lister som skal fylles opp:
@@ -113,16 +110,13 @@ def gjsnitt(tider=list, temperaturer=list, n=int):
             
             # Returnerer de ferdige listene
             return gyldige_tidspunkt, gjsnitt_temperatur
-
 # Definerer n, hvor langt fram og tilbake vi vil gå fra hver verdi.
 n = 30
-
 # Finner x- og y-verdier for glidegjennomsnittet for verdien n, og erklærer det i variabler.
 gyldige_tidspunkt, gjsnitt_temperatur = gjsnitt(uis_tidspunkt, uis_temperatur, n)
 
 
 # h) Finn temperaturfall mellom 11. juni kl 17:31 og 12. juni kl 03:05
-
 # Definerer tider for start og slutt:
 start_tid = dt(2021, 6, 11, 17, 31)
 slutt_tid = dt(2021, 6, 12, 3, 5)
@@ -134,35 +128,26 @@ def finn_indeks(tidspunktliste=list, gitt_tidspunkt=dt):
     Finner indeksen til et det gitte gitt tidspunkt i listen.
     """
     for i in range(len(tidspunktliste)): 
-        if tidspunktliste[i] >= gitt_tidspunkt: # Når vi finner ut at tidspunktet i listen er lik eller større som måø, så returnerer
+        if tidspunktliste[i] >= gitt_tidspunkt: # Når vi finner ut at tidspunktet i listen er lik eller større enn målet
             return i # Returnerer riktig index
     return -1 # Returnerer siste tidspunkt hvis ingen passer
 # Finner når i tidspunkt-listen til UiS fila at vi finner start- og slutt-tidene:
 start_indeks = finn_indeks(uis_tidspunkt, start_tid)
 slutt_indeks = finn_indeks(uis_tidspunkt, slutt_tid)
 
-# Henter tidspunkt og temperaturer mellom indeksene vi fant:
+# Henter tidspunkt og temperaturer innenfor indeksene vi fant:
 kveld_tidspunkt = uis_tidspunkt[start_indeks:slutt_indeks+1]
 kveld_temperatur = uis_temperatur[start_indeks:slutt_indeks+1]
 
-
-# i) Plott atmosferisk trykk fra begge filene sammen med barometrisk trykk.
-
-
-
-# Plotter temperaturer og trykk som subplotter
-print(f"Lengde på uis_barometrisk_trykk: {len(uis_barometrisk_trykk)}")
-print(f"Første 5 elementer i uis_absolutt_trykk: {uis_barometrisk_trykk[:5]}")
-
-
 fig, (temperatur, trykk) = plt.subplots(2, 1, figsize=(8, 10))
 
-# Første subplot for temperaturer
+# Første subplot: Sammenlikning av trykk
 temperatur.plot(sola_tidspunkt, sola_temperatur, label='Temperatur Sola', color='green')
 temperatur.plot(uis_tidspunkt, uis_temperatur, label='Temperatur UiS', color='blue')
 temperatur.plot(gyldige_tidspunkt, gjsnitt_temperatur, label=f'Gjennomsnitt UiS for n={n}', color='orange')
 temperatur.plot([kveld_tidspunkt[0], kveld_tidspunkt[-1]], [kveld_temperatur[0], kveld_temperatur[-1]], label='Temperaturfall 11-12 juni UiS', color='purple')
 
+# Setter grenser osv.
 temperatur.set_ylim(10, 24)
 temperatur.set_xlim(dt(2021, 6, 11, 0, 0), dt(2021, 6, 14, 0, 0))
 temperatur.set_title('Sammenligning av temperaturer - SOLA og UiS')
@@ -171,19 +156,20 @@ temperatur.set_ylabel('Temperatur (°C)')
 temperatur.grid()
 temperatur.legend(loc='upper left')
 
-# Andre subplot for absolutt trykk fra Sola
+# Andre subplot: Sammenlikning av trykk
 trykk.plot(sola_tidspunkt, sola_absolutt_trykk, label='Absolutt Trykk Sola', color='green')
 trykk.plot(uis_tidspunkt, uis_absolutt_trykk, label='Absolutt trykk UiS', color='blue')
 trykk.plot(uis_tidspunkt, uis_barometrisk_trykk, label='Barometrisk trykk UiS', color='orange')
 
+# Setter grenser osv.
 trykk.set_ylim(1000, 1025)
 trykk.set_xlim(dt(2021, 6, 11, 0, 0), dt(2021, 6, 14, 0, 0))
-trykk.set_title('Absolutt Trykk - Sola Værstasjon')
+trykk.set_title('Sammenlikning av Absolutt & Barometrisk Trykk - Sola og UiS')
 trykk.set_xlabel('Tidspunkt')
 trykk.set_ylabel('Trykk')
 trykk.grid()
 trykk.legend(loc='upper left')
 
-plt.subplots_adjust(hspace=0.4)  # Øker avstanden mellom subplottene
+plt.subplots_adjust(hspace=0.4)
 plt.tight_layout()
 plt.show()
