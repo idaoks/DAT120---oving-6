@@ -28,7 +28,7 @@ with open('temperatur_trykk_met_samme_rune_time_datasett.csv.txt', 'r') as fil:
             
             # Bruker en try-except blokk i hver rad for å lettere finne feilkilder hvis koden feiler.
             except Exception as e:
-                print(f"(ABSOLUTT TRYKK): Feil med rad {rad}: {e}")
+                print(f"(TEMPERATUR): Feil med rad {rad}: {e}")
             
         # Tilsvarende for å hente absolutt trykk:
         if rad[2] and rad[4]:
@@ -62,7 +62,7 @@ with open('trykk_og_temperaturlogg_rune_time.csv.txt', 'r') as fil:
 
             except ValueError: # Bruker except ValueError for å stoppe når datoformat endres 2/3 ut i fila.
                 print(rad[0])
-                print("Ugyldig datoformat oppdaget. Stopping lesingen av filen.")
+                print(f"Ugyldig datoformat oppdaget for tidspunkt {rad[0]}. Stopping lesingen av filen.")
                 break
 
         if rad[4]: # Temperatur er i kolonne 5
